@@ -87,9 +87,3 @@ Each auction produces a JSON file (`output/auction_01.json`, etc.):
 }
 ```
 
-## Evaluation Criteria Addressed
-
-- **Correctness**: Bidders respond concurrently; timeouts are enforced; winners are declared by highest bid.
-- **Time Measurement**: Wall-clock duration from first auction start to last completion is measured and reported.
-- **Resource Standardization**: `GOMAXPROCS` and `GOMEMLIMIT` are configurable via CLI flags.
-- **Clarity**: Clean package structure with tests and documentation.

@@ -13,23 +13,32 @@ import (
 	"time"
 )
 
+const (
+	defaultVCPUs     = 4   // default number of vCPUs (GOMAXPROCS)
+	defaultMemoryMB  = 512 // default memory limit in MB
+	defaultTimeoutMs = 200 // default per-auction timeout in milliseconds
+	defaultBidders   = 100 // default number of bidders
+	defaultAuctions  = 40  // default number of concurrent auctions
+	defaultSeed      = 42  // default random seed for reproducibility
+)
+
 // main is the entry point of the auction simulator. It parses CLI flags for
 // configuration (number of bidders, auctions, timeout, vCPUs, memory limit, seed,
 // and output directory), applies resource constraints, creates bidders and auction
 // items, runs all auctions concurrently, prints a results summary with resource
 // usage, and writes individual auction results as JSON files to the output directory.
 func main() {
-	// --- CLI Flags ---
-	vcpus := flag.Int("vcpus", 4, "Number of vCPUs (GOMAXPROCS)")
-	memoryMB := flag.Int("memory-mb", 512, "Memory limit in MB (GOMEMLIMIT)")
-	timeoutMs := flag.Int("timeout-ms", 200, "Per-auction timeout in milliseconds")
+	// CLI Flags
+	vcpus := flag.Int("vcpus", defaultVCPUs, "Number of vCPUs (GOMAXPROCS)")
+	memoryMB := flag.Int("memory-mb", defaultMemoryMB, "Memory limit in MB (GOMEMLIMIT)")
+	timeoutMs := flag.Int("timeout-ms", defaultTimeoutMs, "Per-auction timeout in milliseconds")
 	outputDir := flag.String("output-dir", "output", "Directory to write auction result JSON files")
-	numBidders := flag.Int("bidders", 100, "Number of bidders")
-	numAuctions := flag.Int("auctions", 40, "Number of concurrent auctions")
-	seed := flag.Int64("seed", 42, "Random seed for reproducibility")
+	numBidders := flag.Int("bidders", defaultBidders, "Number of bidders")
+	numAuctions := flag.Int("auctions", defaultAuctions, "Number of concurrent auctions")
+	seed := flag.Int64("seed", defaultSeed, "Random seed for reproducibility")
 	flag.Parse()
 
-	// --- Apply Resource Constraints ---
+	// Apply Resource Constraints
 	fmt.Println("========================================")
 	fmt.Println("       AUCTION SIMULATOR")
 	fmt.Println("========================================")
@@ -45,22 +54,22 @@ func main() {
 	resource.ApplyConstraints(*vcpus, *memoryMB)
 	fmt.Println("----------------------------------------")
 
-	// --- Create Bidders ---
+	// Create Bidders
 	bidders := bidder.NewBidders(*numBidders, *seed)
 	fmt.Printf("Created %d bidders\n", len(bidders))
 
-	// --- Generate Auction Items ---
+	// Generate Auction Items
 	items := engine.GenerateItems(*numAuctions, *seed+1)
 	fmt.Printf("Generated %d auction items (20 attributes each)\n", len(items))
 	fmt.Println("----------------------------------------")
 
-	// --- Run All Auctions Concurrently ---
+	// Run All Auctions Concurrently
 	timeout := time.Duration(*timeoutMs) * time.Millisecond
 	fmt.Printf("Starting %d auctions concurrently...\n\n", *numAuctions)
 
 	results, totalDuration := engine.RunAllAuctions(items, bidders, timeout)
 
-	// --- Report Results ---
+	// Report Results
 	fmt.Println("========================================")
 	fmt.Println("            RESULTS SUMMARY")
 	fmt.Println("========================================")
@@ -81,7 +90,7 @@ func main() {
 	fmt.Println("----------------------------------------")
 	fmt.Printf("Total bids across all auctions: %d\n", totalBids)
 
-	// --- Resource Snapshot ---
+	// Resource Snapshot
 	resInfo := resource.ReportResources()
 	fmt.Println("----------------------------------------")
 	fmt.Println("Resource Snapshot:")
@@ -92,7 +101,7 @@ func main() {
 	fmt.Printf("  Goroutines:     %d\n", resInfo.NumGoroutines)
 	fmt.Println("========================================")
 
-	// --- Write Output Files ---
+	// Write Output Files
 	if err := os.MkdirAll(*outputDir, 0755); err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating output directory: %v\n", err)
 		os.Exit(1)
@@ -101,7 +110,7 @@ func main() {
 	for _, r := range results {
 		writeAuctionResult(*outputDir, r)
 	}
-	fmt.Printf("\n✅ Wrote %d auction result files to %s/\n", len(results), *outputDir)
+	fmt.Printf("\nWrote %d auction result files to %s/\n", len(results), *outputDir)
 }
 
 // writeAuctionResult serializes a single auction result to a pretty-printed JSON
