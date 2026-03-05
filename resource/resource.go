@@ -7,9 +7,13 @@ import (
 	"runtime/debug"
 )
 
-// ApplyConstraints standardizes the available vCPU and RAM for the simulation.
-//   - vcpus: sets GOMAXPROCS to limit the number of OS threads executing Go code.
-//   - memoryMB: sets the Go runtime soft memory limit (GOMEMLIMIT) in megabytes.
+// ApplyConstraints configures runtime resource constraints for the simulation.
+// It sets GOMAXPROCS to cap CPU parallelism and GOMEMLIMIT to impose a soft memory
+// ceiling on the Go garbage collector. Values of zero or negative are ignored.
+//
+// Parameters:
+//   - vcpus: the desired GOMAXPROCS value (number of OS threads for Go code).
+//   - memoryMB: the soft memory limit in megabytes applied via debug.SetMemoryLimit.
 func ApplyConstraints(vcpus, memoryMB int) {
 	if vcpus > 0 {
 		runtime.GOMAXPROCS(vcpus)
@@ -22,7 +26,13 @@ func ApplyConstraints(vcpus, memoryMB int) {
 	}
 }
 
-// ReportResources returns a snapshot of current resource configuration and usage.
+// ReportResources reads the current Go runtime state and returns a snapshot of
+// resource configuration (GOMAXPROCS, memory limit) and live usage metrics
+// (heap allocation, system memory, goroutine count).
+//
+// Returns:
+//   - models.ResourceInfo: a struct containing the current resource configuration
+//     and memory/goroutine usage statistics.
 func ReportResources() models.ResourceInfo {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)

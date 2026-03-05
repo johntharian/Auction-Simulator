@@ -7,7 +7,15 @@ import (
 	"auction-simulator/models"
 )
 
-// Bidder simulates a participant in auctions.
+// Bidder simulates a participant in auctions. Each bidder has a unique set of
+// valuation weights for item attributes, a response probability, and its own
+// random number generator for deterministic behavior.
+//
+// Fields:
+//   - ID: unique identifier for the bidder.
+//   - weights: internal valuation weights (0–2) for each of the 20 item attributes.
+//   - responseProbability: probability (0.5–0.9) that this bidder participates in a given auction.
+//   - rng: per-bidder random number generator for independent randomness.
 type Bidder struct {
 	ID                  int
 	weights             [20]float64 // internal valuation weights for each attribute
@@ -15,7 +23,17 @@ type Bidder struct {
 	rng                 *rand.Rand
 }
 
-// NewBidders creates n bidders with randomized valuation profiles.
+// NewBidders creates a slice of n bidders, each with randomized valuation weights
+// and response probabilities derived from the provided seed. A master RNG is used
+// to seed individual per-bidder RNGs, ensuring deterministic and reproducible
+// bidder populations.
+//
+// Parameters:
+//   - n: the number of bidders to create.
+//   - seed: the seed for the master random number generator.
+//
+// Returns:
+//   - []*Bidder: a slice of pointers to the newly created bidders.
 func NewBidders(n int, seed int64) []*Bidder {
 	bidders := make([]*Bidder, n)
 	src := rand.NewSource(seed)
@@ -35,8 +53,18 @@ func NewBidders(n int, seed int64) []*Bidder {
 	return bidders
 }
 
-// PlaceBid evaluates the auction item and returns a bid.
-// Returns (nil, false) if the bidder opts out of this auction.
+// PlaceBid evaluates the given auction item and decides whether to place a bid.
+// The bidder first randomly decides whether to participate based on its response
+// probability. If participating, it simulates a thinking delay (5–50 ms), computes
+// a bid amount as the weighted sum of the item's attributes (plus ±10% noise), and
+// returns the resulting bid.
+//
+// Parameters:
+//   - item: the auction item to evaluate and potentially bid on.
+//
+// Returns:
+//   - *models.Bid: the bid placed by this bidder, or nil if the bidder opts out.
+//   - bool: true if a bid was placed, false if the bidder opted out.
 func (b *Bidder) PlaceBid(item models.AuctionItem) (*models.Bid, bool) {
 	// Decide whether to respond
 	if b.rng.Float64() > b.responseProbability {

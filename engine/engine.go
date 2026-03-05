@@ -9,7 +9,17 @@ import (
 	"time"
 )
 
-// GenerateItems creates n auction items with random attributes.
+// GenerateItems creates n auction items, each with 20 randomly generated
+// attributes (values between 0 and 10) using the provided random seed for
+// reproducibility.
+//
+// Parameters:
+//   - n: the number of auction items to generate.
+//   - seed: the seed for the random number generator, ensuring deterministic output.
+//
+// Returns:
+//   - []models.AuctionItem: a slice of generated auction items with populated IDs
+//     and random attributes.
 func GenerateItems(n int, seed int64) []models.AuctionItem {
 	rng := rand.New(rand.NewSource(seed))
 	items := make([]models.AuctionItem, n)
@@ -23,8 +33,20 @@ func GenerateItems(n int, seed int64) []models.AuctionItem {
 	return items
 }
 
-// RunAuction runs a single auction: sends the item to all bidders concurrently,
-// collects bids within the timeout, and declares a winner.
+// RunAuction runs a single auction round for a given item. It sends the item to
+// all bidders concurrently, collects their bids within the specified timeout, and
+// determines the highest bidder as the winner. Bidders that opt out or respond
+// after the deadline are excluded from the final result.
+//
+// Parameters:
+//   - auctionID: a unique identifier for this auction round.
+//   - item: the auction item being bid on.
+//   - bidders: the list of bidders participating in this auction.
+//   - timeout: the maximum duration to wait for bids before closing the auction.
+//
+// Returns:
+//   - models.AuctionResult: the result containing the winning bid, all collected
+//     bids, timing information, and completion status ("completed" or "timeout").
 func RunAuction(auctionID int, item models.AuctionItem, bidders []*bidder.Bidder, timeout time.Duration) models.AuctionResult {
 	startTime := time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -105,7 +127,19 @@ collectLoop:
 	}
 }
 
-// RunAllAuctions launches all auctions concurrently and measures overall duration.
+// RunAllAuctions launches auctions for all provided items concurrently, with each
+// item auctioned off in its own goroutine via RunAuction. It waits for all
+// auctions to complete and measures the overall wall-clock duration.
+//
+// Parameters:
+//   - items: the slice of auction items to be auctioned.
+//   - bidders: the list of bidders participating in every auction.
+//   - timeout: the per-auction timeout passed to each RunAuction call.
+//
+// Returns:
+//   - []models.AuctionResult: a slice of results, one per item, in the same order
+//     as the input items.
+//   - time.Duration: the total wall-clock duration of running all auctions.
 func RunAllAuctions(items []models.AuctionItem, bidders []*bidder.Bidder, timeout time.Duration) ([]models.AuctionResult, time.Duration) {
 	results := make([]models.AuctionResult, len(items))
 	var wg sync.WaitGroup

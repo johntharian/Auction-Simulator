@@ -13,6 +13,11 @@ import (
 	"time"
 )
 
+// main is the entry point of the auction simulator. It parses CLI flags for
+// configuration (number of bidders, auctions, timeout, vCPUs, memory limit, seed,
+// and output directory), applies resource constraints, creates bidders and auction
+// items, runs all auctions concurrently, prints a results summary with resource
+// usage, and writes individual auction results as JSON files to the output directory.
 func main() {
 	// --- CLI Flags ---
 	vcpus := flag.Int("vcpus", 4, "Number of vCPUs (GOMAXPROCS)")
@@ -99,7 +104,13 @@ func main() {
 	fmt.Printf("\n✅ Wrote %d auction result files to %s/\n", len(results), *outputDir)
 }
 
-// writeAuctionResult writes a single auction result to a JSON file.
+// writeAuctionResult serializes a single auction result to a pretty-printed JSON
+// file named "auction_XX.json" (zero-padded by auction ID) in the specified
+// directory. Errors during marshalling or file writing are logged to stderr.
+//
+// Parameters:
+//   - dir: the output directory path where the JSON file will be written.
+//   - result: the auction result to serialize and write.
 func writeAuctionResult(dir string, result models.AuctionResult) {
 	filename := filepath.Join(dir, fmt.Sprintf("auction_%02d.json", result.AuctionID))
 	data, err := json.MarshalIndent(result, "", "  ")
