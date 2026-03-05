@@ -102,15 +102,16 @@ func main() {
 	fmt.Println("========================================")
 
 	// Write Output Files
-	if err := os.MkdirAll(*outputDir, 0755); err != nil {
+	runDir := filepath.Join(*outputDir, "run_"+time.Now().Format("2006-01-02_15-04-05"))
+	if err := os.MkdirAll(runDir, 0755); err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating output directory: %v\n", err)
 		os.Exit(1)
 	}
 
 	for _, r := range results {
-		writeAuctionResult(*outputDir, r)
+		writeAuctionResult(runDir, r)
 	}
-	fmt.Printf("\nWrote %d auction result files to %s/\n", len(results), *outputDir)
+	fmt.Printf("\nWrote %d auction result files to %s/\n", len(results), runDir)
 }
 
 // writeAuctionResult serializes a single auction result to a pretty-printed JSON

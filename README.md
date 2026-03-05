@@ -40,7 +40,36 @@ This ensures reproducible benchmarks across different hardware.
 
 ```bash
 go build -o auction-simulator .
-./auction-simulator --vcpus=4 --memory-mb=512 --timeout-ms=200 --output-dir=output
+```
+
+Run with default settings (100 bidders, 40 auctions, 200ms timeout):
+
+```bash
+./auction-simulator
+```
+
+Run with more bidders and a longer timeout:
+
+```bash
+./auction-simulator --bidders=200 --timeout-ms=500
+```
+
+Stress test with higher concurrency and constrained resources:
+
+```bash
+./auction-simulator --bidders=500 --auctions=100 --vcpus=2 --memory-mb=256 --timeout-ms=100
+```
+
+Quick test run with fewer auctions:
+
+```bash
+./auction-simulator --bidders=10 --auctions=5 --timeout-ms=1000
+```
+
+Run with a custom seed and output directory:
+
+```bash
+./auction-simulator --seed=123 --output-dir=results
 ```
 
 ### CLI Flags
