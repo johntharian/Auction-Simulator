@@ -1,6 +1,6 @@
 # Auction Simulator
 
-A concurrent auction simulator written in Go that runs multiple auctions simultaneously, collects bids from simulated bidders, and measures execution times while adhering to configurable resource constraints.
+A concurrent auction simulator written in **Go** that runs multiple auctions simultaneously, collects bids from simulated bidders, and measures execution times while adhering to configurable resource constraints.
 
 ## Architecture
 
@@ -115,4 +115,3 @@ Each auction produces a JSON file (`output/auction_01.json`, etc.):
   "status": "completed"
 }
 ```
-
